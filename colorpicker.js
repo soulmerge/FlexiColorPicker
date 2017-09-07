@@ -24,20 +24,33 @@
     ].join('');
 
     /**
-     * Return mouse position relative to the element el.
+     * Return mouse position relative to the element el, optionally
+     * clipping the coordinates to be inside the element
      */
-    function mousePosition(evt) {
-        // IE:
-        if (window.event && window.event.contentOverflow !== undefined) {
-            return { x: window.event.offsetX, y: window.event.offsetY };
+    function mousePosition(evt, el, clip) {
+        var posx = 0, posy = 0, result,
+            bounds = el.getBoundingClientRect();
+        // https://www.quirksmode.org/js/events_properties.html#position
+        evt = evt || window.event;
+        if (evt.pageX || evt.pageY) 	{
+            posx = evt.pageX;
+            posy = evt.pageY;
         }
-        // Webkit:
-        if (evt.offsetX !== undefined && evt.offsetY !== undefined) {
-            return { x: evt.offsetX, y: evt.offsetY };
+        else if (evt.clientX || evt.clientY) 	{
+            posx = evt.clientX + document.body.scrollLeft
+                + document.documentElement.scrollLeft;
+            posy = evt.clientY + document.body.scrollTop
+                + document.documentElement.scrollTop;
         }
-        // Firefox:
-        var wrapper = evt.target.parentNode.parentNode;
-        return { x: evt.layerX - wrapper.offsetLeft, y: evt.layerY - wrapper.offsetTop };
+        result = {
+            x: posx - bounds.left,
+            y: posy - bounds.top
+        };
+        if (clip) {
+            result.x = Math.max(0, Math.min(el.offsetWidth, result.x));
+            result.y = Math.max(0, Math.min(el.offsetHeight, result.y));
+        }
+        return result;
     }
 
     /**
@@ -186,7 +199,7 @@
     function slideListener(ctx, slideElement, pickerElement) {
         return function(evt) {
             evt = evt || window.event;
-            var mouse = mousePosition(evt);
+            var mouse = mousePosition(evt, slideElement, true);
             ctx.h = mouse.y / slideElement.offsetHeight * 360 + hueOffset;
             var pickerColor = hsv2rgb({ h: ctx.h, s: 1, v: 1 });
             var c = hsv2rgb({ h: ctx.h, s: ctx.s, v: ctx.v });
@@ -202,7 +215,7 @@
     function pickerListener(ctx, pickerElement) {
         return function(evt) {
             evt = evt || window.event;
-            var mouse = mousePosition(evt),
+            var mouse = mousePosition(evt, pickerElement, true),
                 width = pickerElement.offsetWidth,
                 height = pickerElement.offsetHeight;
 
@@ -333,13 +346,13 @@
         var start = function() {
             removeEventListener(element, 'mousedown', start);
             addEventListener(document.body, 'mouseup', stop);
-            addEventListener(element, 'mousemove', listener);
+            addEventListener(document.body, 'mousemove', listener);
         };
 
         var stop = function() {
             addEventListener(element, 'mousedown', start);
             removeEventListener(document.body, 'mouseup', stop);
-            removeEventListener(element, 'mousemove', listener);
+            removeEventListener(document.body, 'mousemove', listener);
         };
 
         addEventListener(element, 'mousedown', start);
