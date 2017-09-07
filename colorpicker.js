@@ -332,15 +332,13 @@
 
         var start = function() {
             removeEventListener(element, 'mousedown', start);
-            addEventListener(element, 'mouseup', stop);
-            addEventListener(element, 'mouseout', stop);
+            addEventListener(document.body, 'mouseup', stop);
             addEventListener(element, 'mousemove', listener);
         };
 
         var stop = function() {
             addEventListener(element, 'mousedown', start);
-            removeEventListener(element, 'mouseup', stop);
-            removeEventListener(element, 'mouseout', stop);
+            removeEventListener(document.body, 'mouseup', stop);
             removeEventListener(element, 'mousemove', listener);
         };
 
