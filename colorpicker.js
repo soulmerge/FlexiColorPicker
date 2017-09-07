@@ -345,6 +345,14 @@
         };
 
         addEventListener(element, 'mousedown', start);
+        addEventListener(element, 'dragstart', function(evt) {
+            evt = evt || window.event;
+            if (evt.preventDefault) {
+                evt.preventDefault();
+            } else {
+                evt.returnValue = false;
+            }
+        });
 
     }
 
