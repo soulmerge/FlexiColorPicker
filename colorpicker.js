@@ -310,6 +310,18 @@
         }
     }
 
+    function removeEventListener(element, event, listener) {
+
+        if (element.detachEvent) {
+
+            element.detachEvent('on' + event, listener);
+
+        } else if (element.removeEventListener) {
+
+            element.removeEventListener(event, listener, false);
+        }
+    }
+
    /**
     * Enable drag&drop color selection.
     * @param {object} ctx ColorPicker instance.
@@ -318,18 +330,22 @@
     */
     function enableDragging(ctx, element, listener) {
 
-        var mousedown = false;
+        var start = function() {
+            removeEventListener(element, 'mousedown', start);
+            addEventListener(element, 'mouseup', stop);
+            addEventListener(element, 'mouseout', stop);
+            addEventListener(element, 'mousemove', listener);
+        };
 
-        addEventListener(element, 'mousedown', function(evt) { mousedown = true;  });
-        addEventListener(element, 'mouseup',   function(evt) { mousedown = false;  });
-        addEventListener(element, 'mouseout',  function(evt) { mousedown = false;  });
-        addEventListener(element, 'mousemove', function(evt) {
+        var stop = function() {
+            addEventListener(element, 'mousedown', start);
+            removeEventListener(element, 'mouseup', stop);
+            removeEventListener(element, 'mouseout', stop);
+            removeEventListener(element, 'mousemove', listener);
+        };
 
-            if (mousedown) {
+        addEventListener(element, 'mousedown', start);
 
-                listener(evt);
-            }
-        });
     }
 
 
